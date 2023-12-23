@@ -1,0 +1,25 @@
+{
+  "name": "bun",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "bun run .",
+    "start:dev": "bun run --watch .",
+    "start:prod": "bun run dist/index.js",
+    "prebuild": "rimraf dist",
+    "build": "bun build . --target=bun --outfile=dist/index.js",
+    "format": "bunx prettier -w **/*.ts"
+  },
+  "dependencies": {
+    "drizzle-orm": "latest",
+    "elysia": "latest",
+    "mysql2": "latest",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "bun-types": "latest",
+    "drizzle-kit": "latest",
+    "prettier": "latest",
+    "rimraf": "latest"
+  }
+}
