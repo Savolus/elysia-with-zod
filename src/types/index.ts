@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import Elysia, { Context, HTTPMethod } from 'elysia'
+import Elysia, { Context, HTTPMethod, SingletonBase } from 'elysia'
 
 import { db } from '../database'
 import { handle } from '../core'
@@ -30,7 +30,13 @@ export type CustomContext<
 }
 
 // Type for patching application with custom routes handlers
-export type Customize<App extends Elysia> = Prettify<{
+export type Customize<
+  App extends Elysia<
+    '',
+    false,
+    SingletonBase & { decorator: { db: typeof db } }
+  >,
+> = Prettify<{
   route: <
     ParamsSchema extends z.ZodObject<{}>,
     QuerySchema extends z.ZodObject<{}>,

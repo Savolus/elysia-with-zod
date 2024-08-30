@@ -2,6 +2,7 @@ import { z } from 'zod'
 import Elysia from 'elysia'
 
 import { db } from '../database'
+import { OpenAPI } from './openapi'
 import {
   Customize,
   CustomContext,
@@ -52,6 +53,8 @@ class App {
   }
 
   zodify() {
+    const openapi = new OpenAPI()
+
     const zod: Customize<typeof this.app> = {
       route: (method, path, handler, schema) =>
         this.app.route(method, path, handle(handler, schema)),
@@ -71,6 +74,7 @@ class App {
 
     return Object.assign(this.app, {
       zod,
+      openapi,
     })
   }
 }

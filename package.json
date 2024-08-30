@@ -11,6 +11,8 @@
     "format": "bunx prettier -w **/*.ts"
   },
   "dependencies": {
+    "@asteasolutions/zod-to-openapi": "latest",
+    "@elysiajs/swagger": "latest",
     "drizzle-orm": "latest",
     "elysia": "latest",
     "mysql2": "latest",

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import swagger from '@elysiajs/swagger'
 
 import { configs } from './configs'
 import { AppFactory } from './core'
@@ -12,9 +13,15 @@ app.get('/', () => 'Elysia')
 // Patched with zod elysia route without request schemas
 app.zod.get('/without-schema', () => 'Elysia')
 
+// Creating zod validation and openapi documentation schemas
+const testSchema = z.object({ test: z.string() }).openapi('TestSchema')
+
+// Registering openapi documentation schema
+app.openapi.registry.register('TestSchema', testSchema)
+
 // Patched with zod elysia route with request query schema
 app.zod.get('/with-schema', context => context.query.test, {
-  query: z.object({ test: z.string() }),
+  query: testSchema,
 })
 
 // Base elysia route with context decorated with db
@@ -28,4 +35,16 @@ app.listen(configs.application.port)
 
 console.log(
   `🦊 Elysia is running at http://${app.server?.hostname}:${app.server?.port}`,
+)
+
+// Generating swagger documentation and setting components
+app.openapi.generate().then(docs =>
+  app.use(
+    swagger({
+      // provider: 'swagger-ui', // <- If you wan default swagger ui experience
+      documentation: {
+        components: docs.components as any,
+      },
+    }),
+  ),
 )
