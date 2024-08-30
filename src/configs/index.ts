@@ -1,4 +1,7 @@
 import { z } from 'zod'
+import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi'
+
+extendZodWithOpenApi(z)
 
 // Validated and transformed environment variable
 export const configs = z
