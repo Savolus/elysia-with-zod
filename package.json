@@ -22,6 +22,7 @@
     "bun-types": "latest",
     "drizzle-kit": "latest",
     "prettier": "latest",
-    "rimraf": "latest"
+    "rimraf": "latest",
+    "typescript": "latest"
   }
 }

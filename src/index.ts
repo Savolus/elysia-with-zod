@@ -13,22 +13,47 @@ app.get('/', () => 'Elysia')
 // Patched with zod elysia route without request schemas
 app.zod.get('/without-schema', () => 'Elysia')
 
-// Creating zod validation and openapi documentation schemas
-const testSchema = z.object({ test: z.string() }).openapi('TestSchema')
-
-// Registering openapi documentation schema
-app.openapi.registry.register('TestSchema', testSchema)
-
 // Patched with zod elysia route with request query schema
-app.zod.get('/with-schema', context => context.query.test, {
-  query: testSchema,
+app.zod.get('/get-with-schema', context => context.query.test, {
+  query: z.object({ test: z.string().openapi({ example: 'query' }) }),
+  response: {
+    200: {
+      schema: z.object({
+        test: z.string().openapi({ example: 'response' }),
+      }),
+    },
+  },
+})
+
+app.zod.post('/post-with-schema', context => context.body.test, {
+  body: {
+    schema: z.object({
+      test: z.string().openapi({ example: 'body' }),
+    }),
+  },
+  response: {
+    200: {
+      schema: z.object({
+        test: z.string().openapi({ example: 'response' }),
+      }),
+    },
+  },
 })
 
 // Base elysia route with context decorated with db
-app.get('/access-ab', context => context.db)
+app.get('/access-db', context => context.db)
 
 // Patched with zod elysia route with context decorated with db
-app.zod.get('/access-ab', context => context.db)
+app.zod.get('/access-zod-db', context => context.db, {
+  query: z.object({ test: z.string().openapi({ example: 'query' }) }),
+  response: {
+    200: {
+      schema: z.object({
+        test: z.string().openapi({ example: 'response' }),
+      }),
+    },
+  },
+})
 
 // Staring listening an application server on the port
 app.listen(configs.application.port)
@@ -41,8 +66,9 @@ console.log(
 app.openapi.generate().then(docs =>
   app.use(
     swagger({
-      // provider: 'swagger-ui', // <- If you wan default swagger ui experience
+      // provider: 'swagger-ui', // <- If you want default swagger ui experience
       documentation: {
+        paths: docs.paths as any,
         components: docs.components as any,
       },
     }),

@@ -4,7 +4,13 @@ import {
 } from '@asteasolutions/zod-to-openapi'
 
 export class OpenAPI {
+  private static _instance: OpenAPI
   public readonly registry = new OpenAPIRegistry()
+
+  static get instance() {
+    this._instance ??= new OpenAPI()
+    return this._instance
+  }
 
   generate() {
     const generator = new OpenApiGeneratorV3(this.registry.definitions)

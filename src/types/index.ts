@@ -1,21 +1,49 @@
 import { z } from 'zod'
-import Elysia, { Context, HTTPMethod, SingletonBase } from 'elysia'
+import Elysia, { Context, SingletonBase } from 'elysia'
+import { ResponseConfig } from '@asteasolutions/zod-to-openapi'
 
 import { db } from '../database'
-import { handle } from '../core'
+
+export type Method =
+  | 'get'
+  | 'post'
+  | 'put'
+  | 'delete'
+  | 'patch'
+  | 'head'
+  | 'options'
 
 // Type for context that is being extended with decorated keys
 export type DecoratedContext = Context & { db: typeof db }
 
+export type OpenapiBody = {
+  description?: string
+  required?: boolean
+  schema: z.ZodObject<{}>
+}
+
+export type RawOpenapiResponse = {
+  [statusCode: string]: ResponseConfig
+}
+
+export type OpenapiResponse = {
+  [statusCode: string]: {
+    description?: string
+    schema: z.ZodObject<{}>
+  }
+}
+
 // Type for schemas that will be validated on the request
-export type RequestSchema<
+export type ApiSchema<
   ParamsSchema extends z.ZodObject<{}>,
   QuerySchema extends z.ZodObject<{}>,
-  BodySchema extends z.ZodObject<{}>,
+  BodySchema extends OpenapiBody,
+  ResponseSchema extends OpenapiResponse,
 > = {
   params?: ParamsSchema
   query?: QuerySchema
   body?: BodySchema
+  response?: ResponseSchema
 }
 
 // Type for decorated context patched with validated request data
@@ -29,6 +57,16 @@ export type CustomContext<
   body: z.infer<BodySchema>
 }
 
+export type Handler<
+  ParamsSchema extends z.ZodObject<{}>,
+  QuerySchema extends z.ZodObject<{}>,
+  BodySchema extends OpenapiBody,
+> = (
+  customContext: Prettify<
+    CustomContext<ParamsSchema, QuerySchema, BodySchema['schema']>
+  >,
+) => unknown
+
 // Type for patching application with custom routes handlers
 export type Customize<
   App extends Elysia<
@@ -37,67 +75,58 @@ export type Customize<
     SingletonBase & { decorator: { db: typeof db } }
   >,
 > = Prettify<{
-  route: <
-    ParamsSchema extends z.ZodObject<{}>,
-    QuerySchema extends z.ZodObject<{}>,
-    BodySchema extends z.ZodObject<{}>,
-  >(
-    method: HTTPMethod,
-    path: string,
-    ...args: Parameters<typeof handle<ParamsSchema, QuerySchema, BodySchema>>
-  ) => ReturnType<App['route']>
-
-  all: <
-    ParamsSchema extends z.ZodObject<{}>,
-    QuerySchema extends z.ZodObject<{}>,
-    BodySchema extends z.ZodObject<{}>,
-  >(
-    path: string,
-    ...args: Parameters<typeof handle<ParamsSchema, QuerySchema, BodySchema>>
-  ) => ReturnType<App['all']>
-
   get: <
     ParamsSchema extends z.ZodObject<{}>,
     QuerySchema extends z.ZodObject<{}>,
-    BodySchema extends z.ZodObject<{}>,
+    BodySchema extends OpenapiBody,
+    ResponseSchema extends OpenapiResponse,
   >(
     path: string,
-    ...args: Parameters<typeof handle<ParamsSchema, QuerySchema, BodySchema>>
+    handler: Handler<ParamsSchema, QuerySchema, BodySchema>,
+    schemas?: ApiSchema<ParamsSchema, QuerySchema, BodySchema, ResponseSchema>,
   ) => ReturnType<App['get']>
 
   post: <
     ParamsSchema extends z.ZodObject<{}>,
     QuerySchema extends z.ZodObject<{}>,
-    BodySchema extends z.ZodObject<{}>,
+    BodySchema extends OpenapiBody,
+    ResponseSchema extends OpenapiResponse,
   >(
     path: string,
-    ...args: Parameters<typeof handle<ParamsSchema, QuerySchema, BodySchema>>
+    handler: Handler<ParamsSchema, QuerySchema, BodySchema>,
+    schemas?: ApiSchema<ParamsSchema, QuerySchema, BodySchema, ResponseSchema>,
   ) => ReturnType<App['post']>
 
   patch: <
     ParamsSchema extends z.ZodObject<{}>,
     QuerySchema extends z.ZodObject<{}>,
-    BodySchema extends z.ZodObject<{}>,
+    BodySchema extends OpenapiBody,
+    ResponseSchema extends OpenapiResponse,
   >(
     path: string,
-    ...args: Parameters<typeof handle<ParamsSchema, QuerySchema, BodySchema>>
+    handler: Handler<ParamsSchema, QuerySchema, BodySchema>,
+    schemas?: ApiSchema<ParamsSchema, QuerySchema, BodySchema, ResponseSchema>,
   ) => ReturnType<App['patch']>
 
   put: <
     ParamsSchema extends z.ZodObject<{}>,
     QuerySchema extends z.ZodObject<{}>,
-    BodySchema extends z.ZodObject<{}>,
+    BodySchema extends OpenapiBody,
+    ResponseSchema extends OpenapiResponse,
   >(
     path: string,
-    ...args: Parameters<typeof handle<ParamsSchema, QuerySchema, BodySchema>>
+    handler: Handler<ParamsSchema, QuerySchema, BodySchema>,
+    schemas?: ApiSchema<ParamsSchema, QuerySchema, BodySchema, ResponseSchema>,
   ) => ReturnType<App['put']>
 
   delete: <
     ParamsSchema extends z.ZodObject<{}>,
     QuerySchema extends z.ZodObject<{}>,
-    BodySchema extends z.ZodObject<{}>,
+    BodySchema extends OpenapiBody,
+    ResponseSchema extends OpenapiResponse,
   >(
     path: string,
-    ...args: Parameters<typeof handle<ParamsSchema, QuerySchema, BodySchema>>
+    handler: Handler<ParamsSchema, QuerySchema, BodySchema>,
+    schemas?: ApiSchema<ParamsSchema, QuerySchema, BodySchema, ResponseSchema>,
   ) => ReturnType<App['delete']>
 }>
